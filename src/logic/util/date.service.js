@@ -1,9 +1,16 @@
 gantt.service('dateFunctions', [ function () {
     // Date calculations from: http://www.datejs.com/ | MIT License
     return {
-        isNumber: function(n) { return !isNaN(parseFloat(n)) && isFinite(n); },
-        isString: function(o) { return typeof o == "string" || (typeof o == "object" && o.constructor === String);},
-        clone: function(date) {
+        isNumber: function (n) {
+            return !isNaN(parseFloat(n)) && isFinite(n);
+        },
+        isString: function (o) {
+            return typeof o == "string" || (typeof o == "object" && o.constructor === String);
+        },
+        clone: function (date) {
+            if (null === date || undefined === date) {
+                return null;
+            }
             if (this.isString(date)) {
                 return new Date(Date.parse(date));
             } else if (this.isNumber(date)) {
@@ -12,14 +19,17 @@ gantt.service('dateFunctions', [ function () {
                 return new Date(date.getTime());
             }
         },
-        setTimeZero: function(date, clone) {
+        setTimeZero: function (date, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setHours(0);
-            res.setMinutes(0);
-            res.setMilliseconds(0);
+            if (res !== null) {
+                res.setHours(0);
+                res.setMinutes(0);
+                res.setMilliseconds(0);
+            }
+
             return res;
         },
-        setTimeComponent: function(date, milliseconds) {
+        setTimeComponent: function (date, milliseconds) {
             return new Date(
                 date.getFullYear(),
                 date.getMonth(),
@@ -29,12 +39,12 @@ gantt.service('dateFunctions', [ function () {
                 0,
                 milliseconds);
         },
-        setToFirstDayOfMonth: function(date, clone) {
+        setToFirstDayOfMonth: function (date, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setDate(1);
             return res;
         },
-        setToDayOfWeek: function(date, dayOfWeek, clone, orient) {
+        setToDayOfWeek: function (date, dayOfWeek, clone, orient) {
             var res = clone === true ? this.clone(date) : date;
             if (res.getDay() === dayOfWeek) {
                 return res;
@@ -44,44 +54,44 @@ gantt.service('dateFunctions', [ function () {
                 return this.addDays(res, (diff === 0) ? diff += 7 * (orient || +1) : diff);
             }
         },
-        addMonths: function(date, val, clone) {
+        addMonths: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setDate(1);
             res.setMonth(res.getMonth() + val);
             return res;
         },
-        addWeeks: function(date, val, clone) {
+        addWeeks: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setDate(res.getDate() + val * 7);
             return res;
         },
-        addDays: function(date, val, clone) {
+        addDays: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setDate(res.getDate() + val);
             return res;
         },
-        addHours: function(date, val, clone) {
+        addHours: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setHours(res.getHours() + val);
             return res;
         },
-        addMinutes: function(date, val, clone) {
+        addMinutes: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setMinutes(res.getMinutes() + val);
             return res;
         },
-        addMilliseconds: function(date, val, clone) {
+        addMilliseconds: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
             res.setMilliseconds(res.getMilliseconds() + val);
             return res;
         },
-        isTimeZero: function(date) {
-            return date.getHours() === 0 && date.getMinutes() === 0 && date.getMinutes() === 0 && date.getMilliseconds() === 0;
+        isTimeZero: function (date) {
+            return date === null || date.getHours() === 0 && date.getMinutes() === 0 && date.getMinutes() === 0 && date.getMilliseconds() === 0;
         },
-        getDaysInMonth: function(date) {
-            return new Date(date.getYear(), date.getMonth()+1, 0).getDate();
+        getDaysInMonth: function (date) {
+            return new Date(date.getYear(), date.getMonth() + 1, 0).getDate();
         },
-        getWeek: function(date) {
+        getWeek: function (date) {
             /* Returns the number of the week. The number is calculated according to ISO 8106 */
             var $y, $m, $d;
             var a, b, c, d, e, f, g, n, s, w;

@@ -72,15 +72,15 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
             if ($scope.viewScale === undefined) $scope.viewScale = "day";
             if ($scope.columnWidth === undefined) $scope.columnWidth = 2;
             if ($scope.columnSubScale === undefined) $scope.columnSubScale = 4;
-            if ($scope.allowTaskMoving === undefined) $scope.allowTaskMoving = true;
-            if ($scope.allowTaskResizing === undefined) $scope.allowTaskResizing = true;
-            if ($scope.allowTaskRowSwitching === undefined) $scope.allowTaskRowSwitching = true;
-            if ($scope.allowRowSorting === undefined) $scope.allowRowSorting = true;
-            if ($scope.allowLabelsResizing === undefined) $scope.allowLabelsResizing = true;
+            if ($scope.allowTaskMoving === undefined) $scope.allowTaskMoving = false;
+            if ($scope.allowTaskResizing === undefined) $scope.allowTaskResizing = false;
+            if ($scope.allowTaskRowSwitching === undefined) $scope.allowTaskRowSwitching = false;
+            if ($scope.allowRowSorting === undefined) $scope.allowRowSorting = false;
+            if ($scope.allowLabelsResizing === undefined) $scope.allowLabelsResizing = false;
             if ($scope.firstDayOfWeek === undefined) $scope.firstDayOfWeek = 1;
             if ($scope.weekendDays === undefined) $scope.weekendDays = [0,6];
             if ($scope.showWeekends === undefined) $scope.showWeekends = true;
-            if ($scope.workHours === undefined) $scope.workHours = [8,9,10,11,12,13,14,15,16];
+            if ($scope.workHours === undefined) $scope.workHours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
             if ($scope.showNonWorkHours === undefined) $scope.showNonWorkHours = true;
             if ($scope.maxHeight === undefined) $scope.maxHeight = 0;
             if ($scope.autoExpand === undefined) $scope.autoExpand = "none";
@@ -877,7 +877,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
 }]);;gantt.factory('Gantt', ['Row', 'ColumnGenerator', 'HeaderGenerator', 'dateFunctions', 'binarySearch', function (Row, ColumnGenerator, HeaderGenerator, df, bs) {
 
     // Gantt logic. Manages the columns, rows and sorting functionality.
-    var Gantt = function(viewScale, columnWidth, columnSubScale, firstDayOfWeek, weekendDays, showWeekends, workHours, showNonWorkHours) {
+    var Gantt = function (viewScale, columnWidth, columnSubScale, firstDayOfWeek, weekendDays, showWeekends, workHours, showNonWorkHours) {
         var self = this;
 
         self.rowsMap = {};
@@ -889,12 +889,20 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
 
         // Sets the Gantt view scale. Call reGenerateColumns to make changes visible after changing the view scale.
         // The headers are shown depending on the defined view scale.
-        self.setViewScale = function(viewScale, columnWidth, columnSubScale, firstDayOfWeek, weekendDays, showWeekends, workHours, showNonWorkHours) {
-            switch(viewScale) {
-                case 'hour': self.columnGenerator = new ColumnGenerator.HourGenerator(columnWidth, columnSubScale, weekendDays, showWeekends, workHours, showNonWorkHours); break;
-                case 'day': self.columnGenerator = new ColumnGenerator.DayGenerator(columnWidth, columnSubScale, weekendDays, showWeekends, workHours, showNonWorkHours); break;
-                case 'week': self.columnGenerator = new ColumnGenerator.WeekGenerator(columnWidth, columnSubScale, firstDayOfWeek); break;
-                case 'month': self.columnGenerator = new ColumnGenerator.MonthGenerator(columnWidth, columnSubScale); break;
+        self.setViewScale = function (viewScale, columnWidth, columnSubScale, firstDayOfWeek, weekendDays, showWeekends, workHours, showNonWorkHours) {
+            switch (viewScale) {
+                case 'hour':
+                    self.columnGenerator = new ColumnGenerator.HourGenerator(columnWidth, columnSubScale, weekendDays, showWeekends, workHours, showNonWorkHours);
+                    break;
+                case 'day':
+                    self.columnGenerator = new ColumnGenerator.DayGenerator(columnWidth, columnSubScale, weekendDays, showWeekends, workHours, showNonWorkHours);
+                    break;
+                case 'week':
+                    self.columnGenerator = new ColumnGenerator.WeekGenerator(columnWidth, columnSubScale, firstDayOfWeek);
+                    break;
+                case 'month':
+                    self.columnGenerator = new ColumnGenerator.MonthGenerator(columnWidth, columnSubScale);
+                    break;
                 default:
                     throw "Unsupported view scale: " + viewScale;
             }
@@ -905,14 +913,14 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         self.setViewScale(viewScale, columnWidth, columnSubScale, firstDayOfWeek, weekendDays, showWeekends, workHours, showNonWorkHours);
 
         // Expands the default date range. Even if there tasks are smaller the specified date range is shown.
-        self.expandDefaultDateRange = function(from, to) {
+        self.expandDefaultDateRange = function (from, to) {
             if (from !== undefined && to !== undefined) {
                 expandDateRange(from, to);
                 expandColumns();
             }
         };
 
-        var expandDateRange = function(from, to) {
+        var expandDateRange = function (from, to) {
             from = df.clone(from);
             to = df.clone(to);
 
@@ -927,7 +935,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Generates the Gantt columns according to the current dateRange. The columns are generated if necessary only.
-        var expandColumns = function() {
+        var expandColumns = function () {
             if (dateRange === undefined) {
                 throw "From and to date range cannot be undefined";
             }
@@ -937,18 +945,18 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Generates the Gantt columns according to the specified from - to date range. Uses the currently assigned column generator.
-        var expandColumnsNoCheck = function(from ,to) {
+        var expandColumnsNoCheck = function (from, to) {
             self.columns = self.columnGenerator.generate(from, to);
             self.headers = self.headerGenerator.generate(self.columns);
             self.updateTasksPosAndSize();
 
             var lastColumn = self.getLastColumn();
-            self.width = lastColumn !== undefined ? lastColumn.left + lastColumn.width: 0;
+            self.width = lastColumn !== undefined ? lastColumn.left + lastColumn.width : 0;
         };
 
         // Removes all existing columns and re-generates them. E.g. after e.g. the view scale changed.
         // Rows can be re-generated only if there is a data-range specified. If the re-generation failed the function returns false.
-        self.reGenerateColumns = function() {
+        self.reGenerateColumns = function () {
             self.columns = [];
 
             if (dateRange !== undefined) {
@@ -960,7 +968,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Update the position/size of all tasks in the Gantt
-        self.updateTasksPosAndSize = function() {
+        self.updateTasksPosAndSize = function () {
             for (var i = 0, l = self.rows.length; i < l; i++) {
                 for (var j = 0, k = self.rows[i].tasks.length; j < k; j++) {
                     self.rows[i].tasks[j].updatePosAndSize();
@@ -969,16 +977,16 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the first Gantt column or undefined
-        self.getLastColumn = function() {
+        self.getLastColumn = function () {
             if (self.columns.length > 0) {
-                return self.columns[self.columns.length-1];
+                return self.columns[self.columns.length - 1];
             } else {
                 return undefined;
             }
         };
 
         // Returns the last Gantt column or undefined
-        self.getFirstColumn = function() {
+        self.getFirstColumn = function () {
             if (self.columns.length > 0) {
                 return self.columns[0];
             } else {
@@ -987,21 +995,25 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the column at the given or next possible date
-        self.getColumnByDate = function(date) {
-            var columns = bs.get(self.columns, date, function(c) { return c.date; });
-            return columns[0] !== undefined? columns[0]: columns[1];
+        self.getColumnByDate = function (date) {
+            var columns = bs.get(self.columns, date, function (c) {
+                return c.date;
+            });
+            return columns[0] !== undefined ? columns[0] : columns[1];
         };
 
         // Returns the column at the given position x (in em)
-        self.getColumnByPosition = function(x) {
-            return bs.get(self.columns, x, function(c) { return c.left; })[0];
+        self.getColumnByPosition = function (x) {
+            return bs.get(self.columns, x, function (c) {
+                return c.left;
+            })[0];
         };
 
         // Returns the exact column date at the given position x (in em)
-        self.getDateByPosition = function(x, snapForward) {
+        self.getDateByPosition = function (x, snapForward) {
             var column = self.getColumnByPosition(x);
             if (column !== undefined) {
-                if(arguments.length == 2) return column.getDateByPosition(x - column.left, snapForward);
+                if (arguments.length == 2) return column.getDateByPosition(x - column.left, snapForward);
                 else return column.getDateByPosition(x - column.left);
             } else {
                 return undefined;
@@ -1009,7 +1021,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the position inside the Gantt calculated by the given date
-        self.getPositionByDate = function(date) {
+        self.getPositionByDate = function (date) {
             var column = self.getColumnByDate(date);
             if (column !== undefined) {
                 return column.getPositionByDate(date);
@@ -1019,7 +1031,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the current Gantt date range or undefined if it has not been defined
-        self.getDateRange = function() {
+        self.getDateRange = function () {
             if (dateRange === undefined) {
                 return undefined;
             } else {
@@ -1031,7 +1043,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the min and max date of all loaded tasks or undefined if there are no tasks loaded
-        self.getTasksDateRange = function() {
+        self.getTasksDateRange = function () {
             if (self.rows.length === 0) {
                 return undefined;
             } else {
@@ -1057,7 +1069,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Returns the number of active headers
-        self.getActiveHeadersCount = function() {
+        self.getActiveHeadersCount = function () {
             var size = 0, key;
             for (key in self.headers) {
                 if (self.headers.hasOwnProperty(key)) size++;
@@ -1066,7 +1078,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Adds or update rows and tasks.
-        self.addData = function(data, addEventFn, updateEventFN) {
+        self.addData = function (data, addEventFn, updateEventFN) {
             for (var i = 0, l = data.length; i < l; i++) {
                 var rowData = data[i];
                 var isUpdate = addRow(rowData);
@@ -1085,7 +1097,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Adds a row or merges the row and its tasks if there is already one with the same id
-        var addRow = function(rowData) {
+        var addRow = function (rowData) {
             // Copy to new row (add) or merge with existing (update)
             var row, isUpdate = false;
 
@@ -1123,7 +1135,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
 
         // Removes specified rows or tasks.
         // If a row has no tasks inside the complete row will be deleted.
-        self.removeData = function(data, updateEventFn) {
+        self.removeData = function (data, updateEventFn) {
             for (var i = 0, l = data.length; i < l; i++) {
                 var rowData = data[i];
 
@@ -1149,7 +1161,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Removes the complete row including all tasks
-        var removeRow = function(rowId) {
+        var removeRow = function (rowId) {
             if (rowId in self.rowsMap) {
                 delete self.rowsMap[rowId]; // Remove from map
 
@@ -1166,7 +1178,7 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         };
 
         // Removes all rows and tasks
-        self.removeAllRows = function() {
+        self.removeAllRows = function () {
             self.rowsMap = {};
             self.rows = [];
             self.highestRowOrder = 0;
@@ -1251,13 +1263,13 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
     return Gantt;
 }]);;gantt.factory('HeaderGenerator', [ 'Column', 'dateFunctions', function (Column, df) {
 
-    var generateHourHeader = function(columns) {
+    var generateHourHeader = function (columns) {
         var generatedHeaders = [];
 
         var header;
         for (var i = 0, l = columns.length; i < l; i++) {
             var col = columns[i];
-            if (i === 0 || columns[i-1].date.getHours() !== col.date.getHours()) {
+            if (i === 0 || columns[i - 1].date.getHours() !== col.date.getHours()) {
                 header = new Column.Hour(df.clone(col.date), col.left, col.width, col.isWeekend, col.isWorkHour);
                 generatedHeaders.push(header);
             } else {
@@ -1268,13 +1280,13 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         return generatedHeaders;
     };
 
-    var generateDayHeader = function(columns) {
+    var generateDayHeader = function (columns) {
         var generatedHeaders = [];
 
         var header;
         for (var i = 0, l = columns.length; i < l; i++) {
             var col = columns[i];
-            if (i === 0 || columns[i-1].date.getDay() !== col.date.getDay()) {
+            if (i === 0 || columns[i - 1].date.getDay() !== col.date.getDay()) {
                 header = new Column.Day(df.clone(col.date), col.left, col.width, col.isWeekend, col.daysToNextWorkingDay, col.daysToPrevWorkingDay);
                 generatedHeaders.push(header);
             } else {
@@ -1285,13 +1297,13 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         return generatedHeaders;
     };
 
-    var generateWeekHeader = function(columns) {
+    var generateWeekHeader = function (columns) {
         var generatedHeaders = [];
 
         var header;
         for (var i = 0, l = columns.length; i < l; i++) {
             var col = columns[i];
-            if (i === 0 || df.getWeek(columns[i-1].date) !== df.getWeek(col.date)) {
+            if (i === 0 || df.getWeek(columns[i - 1].date) !== df.getWeek(col.date)) {
                 header = new Column.Week(df.clone(col.date), col.left, col.width, df.getWeek(col.date));
                 generatedHeaders.push(header);
             } else {
@@ -1302,13 +1314,13 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
         return generatedHeaders;
     };
 
-    var generateMonthHeader = function(columns) {
+    var generateMonthHeader = function (columns) {
         var generatedHeaders = [];
 
         var header;
         for (var i = 0, l = columns.length; i < l; i++) {
             var col = columns[i];
-            if (i === 0 || columns[i-1].date.getMonth() !== col.date.getMonth()) {
+            if (i === 0 || columns[i - 1].date.getMonth() !== col.date.getMonth()) {
                 header = new Column.Month(df.clone(col.date), col.left, col.width);
                 generatedHeaders.push(header);
             } else {
@@ -1320,11 +1332,11 @@ gantt.directive('gantt', ['Gantt', 'dateFunctions', 'mouseOffset', 'debounce', '
     };
 
     return {
-        instance: function(viewScale) {
-            this.generate = function(columns) {
+        instance: function (viewScale) {
+            this.generate = function (columns) {
                 var headers = {};
 
-                switch(viewScale) {
+                switch (viewScale) {
                     case 'hour':
                         headers.hour = generateHourHeader(columns);
                         headers.day = generateDayHeader(columns);

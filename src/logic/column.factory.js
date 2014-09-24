@@ -161,16 +161,11 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
         };
 
         column.getPositionByDate = function (date) {
-            //first check that the date actually corresponds to this column
-            //(it is possible that it might not if weekends are hidden, in which case this will be the nearest previous column)
-//            if (df.setTimeZero(date, true) > df.setTimeZero(column.date, true)) return column.left + column.width;
-//
-            return column.left;
-//            var maxDateValue = endHour-startHour;
-//            var currentDateValue = date.getHours()-startHour;
-//            if (currentDateValue < 0) return column.left;
-//            else if (currentDateValue > maxDateValue) return column.left + column.width;
-//            else return calcPbyD(column, date, maxDateValue, currentDateValue, date.getDate(), column.date.getDate());
+            if (date.getDate() === column.date.getDate()) {
+                return column.left;
+            }
+            
+            return column.left - 1000;
         };
 
         return column;

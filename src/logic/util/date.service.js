@@ -30,7 +30,7 @@ gantt.service('dateFunctions', [ function () {
             return res;
         },
         setTimeComponent: function (date, milliseconds) {
-            return new Date(
+            return date === null ? null : new Date(
                 date.getFullYear(),
                 date.getMonth(),
                 date.getDate(),
@@ -41,11 +41,16 @@ gantt.service('dateFunctions', [ function () {
         },
         setToFirstDayOfMonth: function (date, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setDate(1);
+            if (res !== null) {
+                res.setDate(1);
+            }
             return res;
         },
         setToDayOfWeek: function (date, dayOfWeek, clone, orient) {
             var res = clone === true ? this.clone(date) : date;
+            if (res === null) {
+                return null;
+            }
             if (res.getDay() === dayOfWeek) {
                 return res;
             } else {
@@ -56,45 +61,62 @@ gantt.service('dateFunctions', [ function () {
         },
         addMonths: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setDate(1);
-            res.setMonth(res.getMonth() + val);
+            if (res !== null) {
+                res.setDate(1);
+                res.setMonth(res.getMonth() + val);
+            }
+
             return res;
         },
         addWeeks: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setDate(res.getDate() + val * 7);
+            if (res !== null) {
+                res.setDate(res.getDate() + val * 7);
+            }
             return res;
         },
         addDays: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setDate(res.getDate() + val);
+            if (res !== null) {
+                res.setDate(res.getDate() + val);
+            }
             return res;
         },
         addHours: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setHours(res.getHours() + val);
+            if (res !== null) {
+                res.setHours(res.getHours() + val);
+            }
             return res;
         },
         addMinutes: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setMinutes(res.getMinutes() + val);
+            if (res !== null) {
+                res.setMinutes(res.getMinutes() + val);
+            }
             return res;
         },
         addMilliseconds: function (date, val, clone) {
             var res = clone === true ? this.clone(date) : date;
-            res.setMilliseconds(res.getMilliseconds() + val);
+            if (res !== null) {
+                res.setMilliseconds(res.getMilliseconds() + val);
+            }
             return res;
         },
         isTimeZero: function (date) {
             return date === null || date.getHours() === 0 && date.getMinutes() === 0 && date.getMinutes() === 0 && date.getMilliseconds() === 0;
         },
         getDaysInMonth: function (date) {
-            return new Date(date.getYear(), date.getMonth() + 1, 0).getDate();
+            return date === null || new Date(date.getYear(), date.getMonth() + 1, 0).getDate();
         },
         getWeek: function (date) {
             /* Returns the number of the week. The number is calculated according to ISO 8106 */
             var $y, $m, $d;
             var a, b, c, d, e, f, g, n, s, w;
+
+            if (date === null) {
+                return null;
+            }
 
             $y = date.getFullYear();
             $m = date.getMonth() + 1;

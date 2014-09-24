@@ -9,6 +9,9 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
     var calcPbyD = function (column, date, maxDateValue, currentDateValue, a, b) {
         var factor;
 
+        if (date === null) {
+            factor = 0;
+        }
         if (date - column.date > 0 && a !== b) {
             factor = 1;
         } else {
@@ -52,6 +55,7 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
         };
 
         column.getPositionByDate = function (date) {
+            date = date || {};
             return calcPbyD(column, date, column.daysInMonth, date.getDate(), date.getMonth(), column.date.getMonth());
         };
 
@@ -105,6 +109,7 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
         };
 
         column.getPositionByDate = function (date) {
+            date = date || {};
             return calcPbyD(column, date, column.daysInWeek, firstDayIs0(date.getDay()), getWeek(date), getWeek(column.date));
         };
 
@@ -158,8 +163,8 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
         column.getPositionByDate = function (date) {
             //first check that the date actually corresponds to this column
             //(it is possible that it might not if weekends are hidden, in which case this will be the nearest previous column)
-            if (df.setTimeZero(date, true) > df.setTimeZero(column.date, true)) return column.left + column.width;
-
+//            if (df.setTimeZero(date, true) > df.setTimeZero(column.date, true)) return column.left + column.width;
+//
             return column.left;
 //            var maxDateValue = endHour-startHour;
 //            var currentDateValue = date.getHours()-startHour;
@@ -211,7 +216,7 @@ gantt.factory('Column', [ 'dateFunctions', function (df) {
         column.getPositionByDate = function (date) {
             if (df.setTimeZero(date, true) > df.setTimeZero(column.date, true)) return column.left + column.width;
 
-            return calcPbyD(column, date, 60, date.getMinutes(), date.getHours(), column.date.getHours());
+            return date === null ? 0 : calcPbyD(column, date, 60, date.getMinutes(), date.getHours(), column.date.getHours());
         };
 
         return column;

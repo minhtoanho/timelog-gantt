@@ -19,7 +19,7 @@ gantt.factory('Task', ['dateFunctions', function (df) {
         }
 
         self.checkIfMilestone = function () {
-            self.isMilestone = null === self.to || null === self.from || self.from - self.to === 0;
+            self.isMilestone = self.from - self.to === 0;
         };
 
         self.checkIfMilestone();
@@ -29,16 +29,21 @@ gantt.factory('Task', ['dateFunctions', function (df) {
         };
 
         // Updates the pos and size of the task according to the from - to date
-        self.updatePosAndSize = function () {
-            if (null !== self.from) {
-                self.left = self.gantt.getPositionByDate(self.from);
-            } else if (null !== self.to) {
-                self.left = self.gantt.getPositionByDate(self.to);
+        self.updatePosAndSize = function (index, beforeTop, beforeLeft) {
+            self.left = self.gantt.getPositionByDate(self.from);
+            self.width = Math.round((self.gantt.getPositionByDate(self.to) - self.left) * 10) / 10;
+
+            beforeTop = beforeTop || 0;
+            beforeLeft = beforeLeft || 0;
+
+            if (index === 0 || self.top === undefined || self.top === null) {
+                self.top = 0;
+            } else if (beforeLeft === self.left) {
+                self.top = beforeTop + 2;
+            } else {
+                self.top = 0;
             }
 
-            if (!self.isMilestone) {
-                self.width = Math.round((self.gantt.getPositionByDate(self.to) - self.left) * 10) / 10;
-            }
 
             if (self.est !== undefined && self.lct !== undefined) {
                 self.bounds = {};

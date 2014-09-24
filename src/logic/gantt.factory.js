@@ -93,10 +93,18 @@ gantt.factory('Gantt', ['Row', 'ColumnGenerator', 'HeaderGenerator', 'dateFuncti
 
         // Update the position/size of all tasks in the Gantt
         self.updateTasksPosAndSize = function () {
+            var row, task;
             for (var i = 0, l = self.rows.length; i < l; i++) {
+                var beforeLeft = 0,
+                    beforeTop = 0;
+                row = self.rows[i];
                 for (var j = 0, k = self.rows[i].tasks.length; j < k; j++) {
-                    self.rows[i].tasks[j].updatePosAndSize();
+                    task = row.tasks[j];
+                    task.updatePosAndSize(j, beforeTop, beforeLeft);
+                    beforeTop = task.top;
+                    beforeLeft = task.left;
                 }
+                calcRowHeight(row);
             }
         };
 
@@ -221,6 +229,15 @@ gantt.factory('Gantt', ['Row', 'ColumnGenerator', 'HeaderGenerator', 'dateFuncti
         };
 
         // Adds a row or merges the row and its tasks if there is already one with the same id
+        function calcRowHeight(rowData) {
+            rowData.height = rowData.height || 3;
+            var maxTopOfTask = 0;
+            angular.forEach(rowData.tasks, function (task) {
+                maxTopOfTask = task.top > maxTopOfTask ? task.top : maxTopOfTask;
+            });
+            rowData.height += maxTopOfTask;
+        }
+
         var addRow = function (rowData) {
             // Copy to new row (add) or merge with existing (update)
             var row, isUpdate = false;
@@ -247,11 +264,17 @@ gantt.factory('Gantt', ['Row', 'ColumnGenerator', 'HeaderGenerator', 'dateFuncti
             }
 
             if (rowData.tasks !== undefined && rowData.tasks.length > 0) {
+                var beforeLeft = 0,
+                    beforeTop = 0;
                 for (var i = 0, l = rowData.tasks.length; i < l; i++) {
                     var task = row.addTask(rowData.tasks[i]);
-                    expandDateRange(task.from, task.to);
-                    task.updatePosAndSize();
+                    //expandDateRange(task.from, task.to);
+                    task.updatePosAndSize(i, beforeTop, beforeLeft);
+                    beforeTop = task.top;
+                    beforeLeft = task.left;
                 }
+
+                calcRowHeight(rowData);
             }
 
             return isUpdate;
